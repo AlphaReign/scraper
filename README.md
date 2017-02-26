@@ -1,6 +1,8 @@
 # scraper
 AlphaReigns DHT Scraper, includes peer updater and categorizer
 
+More Info Here: https://github.com/AlphaReign/AlphaReign
+
 
 ##Installation
 
