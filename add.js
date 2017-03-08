@@ -31,6 +31,7 @@ var updateES = function(record){
 	var script = {};
 	script.script = {};
 	script.script.inline = `if( !ctx._source.containsKey("created") ){ ctx._source.created = params.time; }`;
+	script.script.inline += `if( !ctx._source.containsKey("categories_updated") ){ ctx._source.categories_updated = 0; }`;
 	script.lang = 'painless';
 	script.script.params = {time : Math.floor(Date.now()/1000)};
 
