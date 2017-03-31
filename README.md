@@ -4,7 +4,7 @@ AlphaReigns DHT Scraper, includes peer updater and categorizer
 More Info Here: https://github.com/AlphaReign/AlphaReign
 
 
-##Installation
+## Installation
 
 1. Download or clone the repository
 2. Install node / npm
