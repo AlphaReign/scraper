@@ -77,6 +77,7 @@ p2p.on('metadata', function (metadata) {
 		record.infohash = metadata.infohash;
 		record.magnet = metadata.magnet;
 		record.updated = Math.floor(new Date().getTime() / 1000);
+		record.categories_updated = 0;
 		record.dht = 1;
 
 		if(typeof metadata.info['file-duration'] !== 'undefined' && metadata.info['file-duration'].length < 100){
