@@ -3,10 +3,10 @@
 var EventEmitter = require('events');
 var util = require('util');
 
-var DHTSpider = require('./dhtspider');
+var dhtcrawler = require('./dhtcrawler');
 var BTClient = require('./btclient');
 
-var P2PSpider = function (options) {
+var P2PSpider = function P2PSpider(options) {
     if (!(this instanceof P2PSpider)) {
         return new P2PSpider(options);
     }
@@ -16,7 +16,6 @@ var P2PSpider = function (options) {
 };
 
 util.inherits(P2PSpider, EventEmitter);
-
 
 P2PSpider.prototype.ignore = function (ignore) {
     this._ignore = ignore;
@@ -32,7 +31,7 @@ P2PSpider.prototype.listen = function (port, address) {
         maxConnections: this.options.maxConnections
     });
 
-    btclient.on('complete', function(metadata, infohash, rinfo) {
+    btclient.on('complete', function (metadata, infohash, rinfo) {
         var _metadata = metadata;
         _metadata.address = rinfo.address;
         _metadata.port = rinfo.port;
@@ -41,7 +40,7 @@ P2PSpider.prototype.listen = function (port, address) {
         this.emit('metadata', _metadata);
     }.bind(this));
 
-    DHTSpider.start({
+    dhtcrawler.start({
         btclient: btclient,
         address: this.address,
         port: this.port,

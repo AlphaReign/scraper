@@ -1,0 +1,12 @@
+{
+    "elasticsearch": {
+        "host": "127.0.0.1:9200"
+    },
+    "batchSize": 100,
+    "tracker": "udp://tracker.coppersurfer.tk:6969/announce",
+    "dht": {
+        "nodesMaxSize": 2000,
+        "maxConnections": 4000,
+        "timeout": 5000
+    }
+}

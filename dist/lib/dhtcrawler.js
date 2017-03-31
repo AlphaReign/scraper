@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 var dgram = require('dgram');
 
@@ -7,43 +7,38 @@ var bencode = require('bencode');
 var utils = require('./utils');
 var KTable = require('./ktable');
 
-var BOOTSTRAP_NODES = [
-    ['router.bittorrent.com', 6881],
-    ['dht.transmissionbt.com', 6881]
-];
+var BOOTSTRAP_NODES = [['router.bittorrent.com', 6881], ['dht.transmissionbt.com', 6881]];
 var TID_LENGTH = 4;
 var NODES_MAX_SIZE = 200;
 var TOKEN_LENGTH = 2;
 
-var DHTSpider = function(options) {
+var dhtcrawler = function dhtcrawler(options) {
     this.btclient = options.btclient;
     this.address = options.address;
     this.port = options.port;
     this.udp = dgram.createSocket('udp4');
     this.ktable = new KTable(options.nodesMaxSize || NODES_MAX_SIZE);
-}
+};
 
-DHTSpider.prototype.sendKRPC = function(msg, rinfo) {
+dhtcrawler.prototype.sendKRPC = function (msg, rinfo) {
     try {
         var buf = bencode.encode(msg);
-    }
-    catch (err) {
+    } catch (err) {
         return;
     }
     this.udp.send(buf, 0, buf.length, rinfo.port, rinfo.address);
 };
 
-DHTSpider.prototype.onFindNodeResponse = function(nodes) {
+dhtcrawler.prototype.onFindNodeResponse = function (nodes) {
     var nodes = utils.decodeNodes(nodes);
-    nodes.forEach(function(node) {
-        if (node.address != this.address && node.nid != this.ktable.nid
-                && node.port < 65536 && node.port > 0) {
+    nodes.forEach(function (node) {
+        if (node.address != this.address && node.nid != this.ktable.nid && node.port < 65536 && node.port > 0) {
             this.ktable.push(node);
         }
     }.bind(this));
 };
 
-DHTSpider.prototype.sendFindNodeRequest = function(rinfo, nid) {
+dhtcrawler.prototype.sendFindNodeRequest = function (rinfo, nid) {
     var _nid = nid != undefined ? utils.genNeighborID(nid, this.ktable.nid) : this.ktable.nid;
     var msg = {
         t: utils.randomID().slice(0, TID_LENGTH),
@@ -57,14 +52,14 @@ DHTSpider.prototype.sendFindNodeRequest = function(rinfo, nid) {
     this.sendKRPC(msg, rinfo);
 };
 
-DHTSpider.prototype.joinDHTNetwork = function() {
-    BOOTSTRAP_NODES.forEach(function(node) {
-        this.sendFindNodeRequest({address: node[0], port: node[1]});
+dhtcrawler.prototype.joinDHTNetwork = function () {
+    BOOTSTRAP_NODES.forEach(function (node) {
+        this.sendFindNodeRequest({ address: node[0], port: node[1] });
     }.bind(this));
 };
 
-DHTSpider.prototype.makeNeighbours = function() {
-    this.ktable.nodes.forEach(function(node) {
+dhtcrawler.prototype.makeNeighbours = function () {
+    this.ktable.nodes.forEach(function (node) {
         this.sendFindNodeRequest({
             address: node.address,
             port: node.port
@@ -73,7 +68,7 @@ DHTSpider.prototype.makeNeighbours = function() {
     this.ktable.nodes = [];
 };
 
-DHTSpider.prototype.onGetPeersRequest = function(msg, rinfo) {
+dhtcrawler.prototype.onGetPeersRequest = function (msg, rinfo) {
     try {
         var infohash = msg.a.info_hash;
         var tid = msg.t;
@@ -81,10 +76,9 @@ DHTSpider.prototype.onGetPeersRequest = function(msg, rinfo) {
         var token = infohash.slice(0, TOKEN_LENGTH);
 
         if (tid === undefined || infohash.length != 20 || nid.length != 20) {
-            throw new Error;
+            throw new Error();
         }
-    }
-    catch (err) {
+    } catch (err) {
         return;
     }
     this.sendKRPC({
@@ -98,7 +92,7 @@ DHTSpider.prototype.onGetPeersRequest = function(msg, rinfo) {
     }, rinfo);
 };
 
-DHTSpider.prototype.onAnnouncePeerRequest = function(msg, rinfo) {
+dhtcrawler.prototype.onAnnouncePeerRequest = function (msg, rinfo) {
     var port;
 
     try {
@@ -108,10 +102,9 @@ DHTSpider.prototype.onAnnouncePeerRequest = function(msg, rinfo) {
         var tid = msg.t;
 
         if (tid == undefined) {
-            throw new Error;
+            throw new Error();
         }
-    }
-    catch (err) {
+    } catch (err) {
         return;
     }
 
@@ -121,8 +114,7 @@ DHTSpider.prototype.onAnnouncePeerRequest = function(msg, rinfo) {
 
     if (msg.a.implied_port != undefined && msg.a.implied_port != 0) {
         port = rinfo.port;
-    }
-    else {
+    } else {
         port = msg.a.port || 0;
     }
 
@@ -138,42 +130,38 @@ DHTSpider.prototype.onAnnouncePeerRequest = function(msg, rinfo) {
         }
     }, rinfo);
 
-    this.btclient.add({address: rinfo.address, port: port}, infohash);
+    this.btclient.add({ address: rinfo.address, port: port }, infohash);
 };
 
-DHTSpider.prototype.onMessage = function(msg, rinfo) {
+dhtcrawler.prototype.onMessage = function (msg, rinfo) {
     try {
         var msg = bencode.decode(msg);
         if (msg.y == 'r' && msg.r.nodes) {
             this.onFindNodeResponse(msg.r.nodes);
-        }
-        else if (msg.y == 'q' && msg.q == 'get_peers') {
+        } else if (msg.y == 'q' && msg.q == 'get_peers') {
             this.onGetPeersRequest(msg, rinfo);
-        }
-        else if (msg.y == 'q' && msg.q == 'announce_peer') {
+        } else if (msg.y == 'q' && msg.q == 'announce_peer') {
             this.onAnnouncePeerRequest(msg, rinfo);
         }
-    }
-    catch (err) {
-    }
+    } catch (err) {}
 };
 
-DHTSpider.prototype.start = function() {
+dhtcrawler.prototype.start = function () {
     this.udp.bind(this.port, this.address);
 
-    this.udp.on('listening', function() {
+    this.udp.on('listening', function () {
         console.log('UDP Server listening on %s:%s', this.address, this.port);
     }.bind(this));
 
-    this.udp.on('message', function(msg, rinfo) {
+    this.udp.on('message', function (msg, rinfo) {
         this.onMessage(msg, rinfo);
     }.bind(this));
 
-    this.udp.on('error', function() {
+    this.udp.on('error', function () {
         // do nothing
     }.bind(this));
 
-    setInterval(function() {
+    setInterval(function () {
         if (this.btclient.isIdle()) {
             this.joinDHTNetwork();
             this.makeNeighbours();
@@ -181,6 +169,6 @@ DHTSpider.prototype.start = function() {
     }.bind(this), 1000);
 };
 
-exports.start = function(options) {
-    (new DHTSpider(options)).start();
+exports.start = function (options) {
+    new dhtcrawler(options).start();
 };
