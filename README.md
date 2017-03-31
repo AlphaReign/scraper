@@ -10,8 +10,7 @@ More Info Here: https://github.com/AlphaReign/AlphaReign
 2. Install node / npm
 3. Install elasticsearch
 4. Install pm2 globally (npm install -g pm2)
-5. cd into repo
-6. Update config.json
+5. Update config.json
 
 ## Run
 
