@@ -37,7 +37,17 @@ var Scraper = exports.Scraper = function () {
 
 			this.es.search({
 				body: {
-					query: { match_all: {} },
+					query: {
+						bool: {
+							filter: {
+								range: {
+									peers_updated: {
+										lt: Date.now() / 1000 - this.config.peerAge * 60 * 60
+									}
+								}
+							}
+						}
+					},
 					sort: {
 						peers_updated: {
 							missing: '_first',
@@ -50,17 +60,17 @@ var Scraper = exports.Scraper = function () {
 				type: 'hash'
 			}, function (error, response) {
 				if (error) {
-					// console.log(error);
 					setTimeout(function () {
 						_this.run();
-					}, 5000);
+					}, _this.config.scrapeFrequency * 1000 * 5);
 
 					return;
 				}
 				if (response.hits.hits.length === 0) {
+					console.log('No torrents need to be scraped');
 					setTimeout(function () {
 						_this.run();
-					}, 5000);
+					}, _this.config.scrapeFrequency * 1000 * 5);
 				} else {
 					var hashes = response.hits.hits.map(function (value) {
 						return value._id;
@@ -93,33 +103,44 @@ var Scraper = exports.Scraper = function () {
 			});
 		}
 	}, {
+		key: 'addRecord',
+		value: function addRecord(records, record) {
+			var update = {
+				update: {
+					_id: record.infoHash,
+					_index: 'torrents',
+					_retry_on_conflict: 3,
+					_type: 'hash'
+				}
+			};
+
+			var doc = {
+				doc: {
+					leechers: record.incomplete,
+					peers_updated: Math.floor(Date.now() / 1000),
+					seeders: record.complete
+				},
+				doc_as_upsert: true
+			};
+
+			records.push(update);
+			records.push(doc);
+
+			return records;
+		}
+	}, {
 		key: 'update',
 		value: function update(results) {
 			var records = [];
 
-			for (var infoHash in results) {
-				if (results[infoHash]) {
-					var update = {
-						update: {
-							_id: results[infoHash].infoHash,
-							_index: 'torrents',
-							_retry_on_conflict: 3,
-							_type: 'hash'
-						}
-					};
-
-					var doc = {
-						doc: {
-							leechers: results[infoHash].incomplete,
-							peers_updated: Math.floor(Date.now() / 1000),
-							seeders: results[infoHash].complete
-						},
-						doc_as_upsert: true
-					};
-
-					records.push(update);
-					records.push(doc);
+			if (typeof results.infoHash === 'undefined') {
+				for (var infoHash in results) {
+					if (results[infoHash]) {
+						records = this.addRecord(records, results[infoHash]);
+					}
 				}
+			} else {
+				records = this.addRecord(records, results);
 			}
 
 			this.store(records);
@@ -135,12 +156,12 @@ var Scraper = exports.Scraper = function () {
 						console.log(error);
 						setTimeout(function () {
 							_this3.run();
-						}, 5000);
+						}, _this3.config.scrapeFrequency * 1000);
 					} else {
 						console.log('Peers Updated');
 						setTimeout(function () {
 							_this3.run();
-						}, 1000);
+						}, _this3.config.scrapeFrequency * 1000);
 					}
 				});
 			}

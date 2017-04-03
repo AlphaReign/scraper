@@ -11,7 +11,17 @@ export class Scraper {
 	run () {
 		this.es.search({
 			body: {
-				query: { match_all: {} },
+				query: {
+					bool: {
+						filter: {
+							range: {
+								peers_updated: {
+									lt: ( Date.now() / 1000 ) - ( this.config.peerAge * 60 * 60 )
+								}
+							}
+						}
+					}
+				},
 				sort: {
 					peers_updated: {
 						missing: '_first',
@@ -24,17 +34,17 @@ export class Scraper {
 			type: 'hash'
 		}, (error, response) => {
 			if (error) {
-				// console.log(error);
 				setTimeout(() => {
 					this.run();
-				}, 5000);
+				}, this.config.scrapeFrequency * 1000 * 5);
 
 				return;
 			}
 			if (response.hits.hits.length === 0) {
+				console.log(`No torrents need to be scraped`);
 				setTimeout(() => {
 					this.run();
-				}, 5000);
+				}, this.config.scrapeFrequency * 1000 * 5);
 			} else {
 				const hashes = response.hits.hits.map((value) => value._id);
 
@@ -64,33 +74,42 @@ export class Scraper {
 
 	}
 
-	update (results) {
-		const records = [];
-
-		for (const infoHash in results) {
-			if (results[infoHash]) {
-				const update = {
-					update: {
-						_id: results[infoHash].infoHash,
-						_index: 'torrents',
-						_retry_on_conflict: 3,
-						_type: 'hash'
-					}
-				};
-
-				const doc = {
-					doc: {
-						leechers: results[infoHash].incomplete,
-						peers_updated: Math.floor(Date.now() / 1000),
-						seeders: results[infoHash].complete
-					},
-					doc_as_upsert: true
-				};
-
-				records.push(update);
-				records.push(doc);
-
+	addRecord (records, record) {
+		const update = {
+			update: {
+				_id: record.infoHash,
+				_index: 'torrents',
+				_retry_on_conflict: 3,
+				_type: 'hash'
 			}
+		};
+
+		const doc = {
+			doc: {
+				leechers: record.incomplete,
+				peers_updated: Math.floor(Date.now() / 1000),
+				seeders: record.complete
+			},
+			doc_as_upsert: true
+		};
+
+		records.push(update);
+		records.push(doc);
+
+		return records;
+	}
+
+	update (results) {
+		let records = [];
+
+		if (typeof results.infoHash === 'undefined') {
+			for (const infoHash in results) {
+				if (results[infoHash]) {
+					records = this.addRecord(records, results[infoHash]);
+				}
+			}
+		} else {
+			records = this.addRecord(records, results);
 		}
 
 		this.store(records);
@@ -103,12 +122,12 @@ export class Scraper {
 					console.log(error);
 					setTimeout(() => {
 						this.run();
-					}, 5000);
+					}, this.config.scrapeFrequency * 1000);
 				} else {
 					console.log('Peers Updated');
 					setTimeout(() => {
 						this.run();
-					}, 1000);
+					}, this.config.scrapeFrequency * 1000);
 				}
 			});
 		}
