@@ -99,7 +99,7 @@ var Indexer = exports.Indexer = function () {
 	}, {
 		key: 'queue',
 		value: function queue(torrent) {
-			console.log('Added: ' + torrent.infohash + ' | ' + torrent.name);
+			console.log('Queuing: ' + torrent.infohash + ' | ' + torrent.name);
 
 			var update = {
 				update: {
@@ -134,7 +134,7 @@ var Indexer = exports.Indexer = function () {
 		value: function checkQueue() {
 			var _this = this;
 
-			if (this.records / 2 < this.config.batchSize || this.inserted) {
+			if (this.torrents.length / 2 < this.config.batchSize && this.inserted) {
 				return;
 			}
 

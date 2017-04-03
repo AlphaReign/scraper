@@ -71,7 +71,7 @@ export class Indexer {
 	}
 
 	queue (torrent) {
-		console.log(`Added: ${torrent.infohash} | ${torrent.name}`);
+		console.log(`Queuing: ${torrent.infohash} | ${torrent.name}`);
 
 		const update = {
 			update: {
@@ -103,7 +103,7 @@ export class Indexer {
 	}
 
 	checkQueue () {
-		if (this.records / 2 < this.config.batchSize || this.inserted) {
+		if (this.torrents.length / 2 < this.config.batchSize && this.inserted) {
 			return;
 		}
 
