@@ -8,32 +8,20 @@ var _scraper = require('./scraper');
 
 var _scraper2 = _interopRequireDefault(_scraper);
 
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
 var _lib = require('./lib');
 
 var _lib2 = _interopRequireDefault(_lib);
 
-var _fs = require('fs');
-
-var _fs2 = _interopRequireDefault(_fs);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var config = void 0;
+var indexer = new _indexer2.default(_config2.default);
+var scraper = new _scraper2.default(_config2.default);
 
-try {
-	config = JSON.parse(_fs2.default.readFileSync('./config.json'));
-} catch (error) {
-	try {
-		config = JSON.parse(_fs2.default.readFileSync('./../config.json'));
-	} catch (lastError) {
-		throw new Error('Could not find config.json file');
-	}
-}
-
-var indexer = new _indexer2.default(config);
-var scraper = new _scraper2.default(config);
-
-var dht = (0, _lib2.default)(config.dht);
+var dht = (0, _lib2.default)(_config2.default.dht);
 
 dht.ignore(function (infohash, rinfo, callback) {
 	// false => always to download the metadata even though the metadata might exists.

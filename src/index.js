@@ -1,20 +1,7 @@
 import Indexer from './indexer';
 import Scraper from './scraper';
+import config from '../config';
 import dhtCrawler from './lib';
-import fs from 'fs';
-
-let config;
-
-try {
-	config = JSON.parse(fs.readFileSync('./config.json'));
-} catch (error) {
-	try {
-		config = JSON.parse(fs.readFileSync('./../config.json'));
-	} catch (lastError) {
-		throw new Error('Could not find config.json file');
-	}
-}
-
 
 const indexer = new Indexer(config);
 const scraper = new Scraper(config);
