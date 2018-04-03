@@ -47,7 +47,7 @@ var Indexer = exports.Indexer = function () {
 
 			var recordFiles = [];
 
-			if (typeof files !== 'undefined' && files.length < 100) {
+			if (typeof files !== 'undefined' && files.length < 250) {
 				files.forEach(function (element) {
 					try {
 						recordFiles.push({
@@ -58,6 +58,15 @@ var Indexer = exports.Indexer = function () {
 						console.log(error);
 					}
 				});
+			} else {
+				try {
+					recordFiles.push({
+						length: _lodash2.default.get(torrentData, 'info.length', '').toString(),
+						path: _lodash2.default.get(torrentData, 'info.name', '').toString()
+					});
+				} catch (error) {
+					console.log(error);
+				}
 			}
 
 			return recordFiles;
@@ -82,11 +91,11 @@ var Indexer = exports.Indexer = function () {
 				updated: Math.floor(new Date().getTime() / 1000)
 			};
 
-			if (typeof torrentData.info['file-duration'] !== 'undefined' && torrentData.info['file-duration'].length < 100) {
+			if (typeof torrentData.info['file-duration'] !== 'undefined' && torrentData.info['file-duration'].length < 250) {
 				record.file_duration = torrentData.info['file-duration'];
 			}
 
-			if (typeof torrentData.info['file-media'] !== 'undefined' && torrentData.info['file-media'].length < 100) {
+			if (typeof torrentData.info['file-media'] !== 'undefined' && torrentData.info['file-media'].length < 250) {
 				record.file_media = torrentData.info['file-media'];
 			}
 
@@ -113,11 +122,12 @@ var Indexer = exports.Indexer = function () {
 				doc: torrent,
 				doc_as_upsert: true
 			};
-
 			var script = {
 				lang: 'painless',
-				script: 'if( !ctx._source.containsKey("created") ){ ctx._source.created = params.time; }',
-				params: { time: Math.floor(Date.now() / 1000) },
+				script: {
+					inline: 'if( !ctx._source.containsKey("created") ){ ctx._source.created = params.time; }',
+					params: { time: Math.floor(Date.now() / 1000) }
+				}
 			};
 
 			this.torrents.push(update);
