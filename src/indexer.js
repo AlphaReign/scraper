@@ -85,12 +85,11 @@ export class Indexer {
 			doc: torrent,
 			doc_as_upsert: true
 		};
+
 		const script = {
 			lang: 'painless',
-			script: {
-				inline: `if( !ctx._source.containsKey("created") ){ ctx._source.created = params.time; }`,
-				params: { time: Math.floor(Date.now() / 1000) }
-			}
+			script: 'if( !ctx._source.containsKey("created") ){ ctx._source.created = params.time; }',
+			params: { time: Math.floor(Date.now() / 1000) },
 		};
 
 		this.torrents.push(update);
