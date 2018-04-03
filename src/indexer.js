@@ -19,7 +19,7 @@ export class Indexer {
 		const { files } = torrentData.info;
 		const recordFiles = [];
 
-		if (typeof files !== 'undefined' && files.length < 100) {
+		if (typeof files !== 'undefined' && files.length < 250) {
 			files.forEach((element) => {
 				try {
 					recordFiles.push({
@@ -30,6 +30,15 @@ export class Indexer {
 					console.log(error);
 				}
 			});
+		} else {
+			try {
+				recordFiles.push({
+					length: _.get(torrentData, 'info.length', '').toString(),
+					path: _.get(torrentData, 'info.name', '').toString()
+				});
+			} catch (error) {
+				console.log(error);
+			}
 		}
 
 		return recordFiles;
@@ -55,11 +64,11 @@ export class Indexer {
 			updated: Math.floor(new Date().getTime() / 1000)
 		};
 
-		if (typeof torrentData.info['file-duration'] !== 'undefined' && torrentData.info['file-duration'].length < 100) {
+		if (typeof torrentData.info['file-duration'] !== 'undefined' && torrentData.info['file-duration'].length < 250) {
 			record.file_duration = torrentData.info['file-duration'];
 		}
 
-		if (typeof torrentData.info['file-media'] !== 'undefined' && torrentData.info['file-media'].length < 100) {
+		if (typeof torrentData.info['file-media'] !== 'undefined' && torrentData.info['file-media'].length < 250) {
 			record.file_media = torrentData.info['file-media'];
 		}
 
@@ -85,7 +94,6 @@ export class Indexer {
 			doc: torrent,
 			doc_as_upsert: true
 		};
-
 		const script = {
 			lang: 'painless',
 			script: 'if( !ctx._source.containsKey("created") ){ ctx._source.created = params.time; }',
