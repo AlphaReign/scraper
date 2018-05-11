@@ -1,18 +1,15 @@
-import Indexer from './indexer';
-import Scraper from './scraper';
-import config from '../config';
-import dhtCrawler from './lib';
+#! /usr/local/bin/node
 
-const indexer = new Indexer(config);
-const scraper = new Scraper(config);
-
-const dht = dhtCrawler(config.dht);
-
-dht.ignore((infohash, rinfo, callback) => {
-	// false => always to download the metadata even though the metadata might exists.
-	callback(false);
+require('babel-register')({
+	plugins: [
+		'transform-class-properties',
+		'transform-es2015-modules-commonjs',
+		'transform-object-rest-spread',
+	],
+	presets: [[
+		'env',
+		{ targets: { node: 'current' } },
+	]],
 });
-dht.on('metadata', indexer.addTorrent.bind(indexer));
-dht.listen(6881, '0.0.0.0');
 
-scraper.run();
+require('./run.js');

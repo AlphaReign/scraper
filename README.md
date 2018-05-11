@@ -1,18 +1,8 @@
-# scraper
-AlphaReigns DHT Scraper, includes peer updater and categorizer
-
-More Info Here: https://github.com/AlphaReign/AlphaReign
-
+# AlphaReign
 
 ## Installation
 
-1. Download or clone the repository
-2. Install node / npm
-3. Install elasticsearch
-4. Install pm2 globally (npm install -g pm2)
-5. Update config.json
-
-## Run
-
-    cd scraper/
-    pm2 start ./dist/index.js
+* Install Node (version 8 or greater)
+* Install pm2 globally ```npm i -g pm2```
+* Change the store in ```src/config.js``` to sqlite or mongodb
+* Run to ```pm2 start ecosystem.config.js```
