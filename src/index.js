@@ -1,15 +1,25 @@
-#! /usr/local/bin/node
+import crawl from './crawl';
+import { createID } from './utils';
+import dgram from 'dgram';
+import log from 'fancy-log';
+import processMessage from './processMessage';
 
-require('babel-register')({
-	plugins: [
-		'transform-class-properties',
-		'transform-es2015-modules-commonjs',
-		'transform-object-rest-spread',
-	],
-	presets: [[
-		'env',
-		{ targets: { node: 'current' } },
-	]],
+const id = createID();
+const socket = dgram.createSocket('udp4');
+const data = {
+	nodes: [],
+	torrents: [],
+};
+
+socket.on('error', (error) => log(error));
+
+socket.on('message', (message, rinfo) => processMessage({ id, message, rinfo }, socket, data));
+
+socket.on('listening', () => {
+	const address = socket.address();
+
+	log(`client listening ${address.address}:${address.port}`);
+	crawl(id, socket, data);
 });
 
-require('./run.js');
+socket.bind(6881);

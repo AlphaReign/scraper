@@ -3,9 +3,7 @@
 		"es6": true,
 		"node": true
 	},
-	"extends": [
-		"eslint:all"
-	],
+	"extends": ["eslint:all", "prettier"],
 	"parser": "babel-eslint",
 	"parserOptions": {
 		"sourceType": "module"
@@ -14,28 +12,17 @@
 		"array-bracket-newline": "off",
 		"array-element-newline": "off",
 		"brace-style": "off",
+		"camelcase": "off",
 		"capitalized-comments": "off",
 		"class-methods-use-this": "off",
-		"comma-dangle": [
-			"error",
-			"always-multiline"
-		],
-		"dot-location": [
-			"error",
-			"property"
-		],
+		"comma-dangle": ["error", "always-multiline"],
+		"dot-location": ["error", "property"],
 		"eol-last": "off",
 		"global-require": "off",
 		"id-length": "off",
-		"indent": [
-			"error",
-			"tab"
-		],
+		"indent": ["error", "tab"],
 		"init-declarations": "off",
-		"max-len": [
-			"error",
-			180
-		],
+		"max-len": ["error", 180],
 		"max-statements-per-line": [
 			"error",
 			{
@@ -63,10 +50,7 @@
 		"no-tabs": "off",
 		"no-ternary": "off",
 		"no-undefined": "off",
-		"object-curly-spacing": [
-			"error",
-			"always"
-		],
+		"object-curly-spacing": ["error", "always"],
 		"one-var": "off",
 		"padded-blocks": "off",
 		"padding-line-between-statements": [
@@ -74,24 +58,12 @@
 			{
 				"blankLine": "always",
 				"next": "*",
-				"prev": [
-					"const",
-					"let",
-					"var"
-				]
+				"prev": ["const", "let", "var"]
 			},
 			{
 				"blankLine": "any",
-				"next": [
-					"const",
-					"let",
-					"var"
-				],
-				"prev": [
-					"const",
-					"let",
-					"var"
-				]
+				"next": ["const", "let", "var"],
+				"prev": ["const", "let", "var"]
 			}
 		],
 		"quote-props": "off",
