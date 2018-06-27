@@ -1,4 +1,4 @@
-import { createTransactionID } from './utils';
+import { createToken, createTransactionID } from './../utils';
 
 /*
  * t: transaction ID
@@ -8,24 +8,34 @@ import { createTransactionID } from './utils';
  * r: dictionary containing named returned values
  */
 
-export const ping = (id) => ({
-	a: { id },
-	q: 'ping',
+export const find_node = (id, nodes) => ({
+	r: {
+		id,
+		nodes,
+	},
 	t: createTransactionID(),
-	y: 'q',
+	y: 'r',
 });
 
-export const find_node = (id, target) => ({
-	a: {
+export const get_peers = (id, values, nodes) => ({
+	r: {
 		id,
-		target,
+		nodes,
+		token: createToken(),
+		values,
 	},
-	q: 'find_node',
 	t: createTransactionID(),
-	y: 'q',
+	y: 'r',
+});
+
+export const ping = (id) => ({
+	r: { id },
+	t: createTransactionID(),
+	y: 'r',
 });
 
 export default {
 	find_node,
+	get_peers,
 	ping,
 };

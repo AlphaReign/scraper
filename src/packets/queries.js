@@ -1,4 +1,4 @@
-import { createTransactionID } from './../utils/dht';
+import { createTransactionID } from './../utils';
 
 /*
  * t: transaction ID
@@ -9,18 +9,20 @@ import { createTransactionID } from './../utils/dht';
  */
 
 export const ping = (id) => ({
-	r: { id },
+	a: { id },
+	q: 'ping',
 	t: createTransactionID(),
-	y: 'r',
+	y: 'q',
 });
 
-export const find_node = (id, nodes) => ({
-	r: {
+export const find_node = (id, target) => ({
+	a: {
 		id,
-		nodes,
+		target,
 	},
+	q: 'find_node',
 	t: createTransactionID(),
-	y: 'r',
+	y: 'q',
 });
 
 export default {

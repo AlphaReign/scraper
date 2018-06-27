@@ -2,13 +2,14 @@ import crawl from './crawl';
 import { createID } from './utils';
 import dgram from 'dgram';
 import log from 'fancy-log';
-import processMessage from './processMessage';
+import persist from './persist';
+import processMessage from './process/message';
 
 const id = createID();
 const socket = dgram.createSocket('udp4');
 const data = {
-	nodes: [],
-	torrents: [],
+	nodes: {},
+	torrents: {},
 };
 
 socket.on('error', (error) => log(error));
@@ -20,6 +21,7 @@ socket.on('listening', () => {
 
 	log(`client listening ${address.address}:${address.port}`);
 	crawl(id, socket, data);
+	persist(data);
 });
 
 socket.bind(6881);
