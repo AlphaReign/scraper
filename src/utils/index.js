@@ -5,6 +5,7 @@ export * from './depact';
 export * from './dht';
 export * from './error';
 export * from './hex';
+export * from './log';
 
 import clean from './clean';
 import compact from './compact';
@@ -13,6 +14,7 @@ import depact from './depact';
 import dht from './dht';
 import error from './error';
 import hex from './hex';
+import log from './log';
 
 export default {
 	...clean,
@@ -22,4 +24,5 @@ export default {
 	...dht,
 	...error,
 	...hex,
+	...log,
 };

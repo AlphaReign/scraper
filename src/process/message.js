@@ -1,5 +1,5 @@
 import bencode from 'bencode';
-import log from 'fancy-log';
+import { log } from './../utils';
 import query from './query';
 import response from './response';
 
@@ -16,6 +16,8 @@ const addNode = ({ decoded, rinfo }, socket, data) => {
 	}
 
 	if (safeID) {
+		// log(`added node ${safeID} from ${rinfo.address}:${rinfo.port}`);
+
 		data.nodes[safeID] = {
 			...data.nodes[safeID],
 			address: rinfo.address,
@@ -24,6 +26,14 @@ const addNode = ({ decoded, rinfo }, socket, data) => {
 			port: rinfo.port,
 			updated: Date.now(),
 		};
+	}
+};
+
+const handleUndefinedType = ({ decoded, type }) => {
+	if (decoded.v) {
+		log(`Failed to handle message with version: ${decoded.v.toString('utf8')} || ${JSON.stringify(decoded)}`, true);
+	} else {
+		log(`Failed to handle type: ${type} || ${JSON.stringify(decoded)}`, true);
 	}
 };
 
@@ -39,13 +49,12 @@ export const processMessage = ({ id, message, rinfo }, socket, data) => {
 		} else if (type === 'r') {
 			response({ decoded, id, message, rinfo }, socket, data);
 		} else if (type === 'e') {
-			log(decoded.e[0], decoded.e[1].toString('utf8'));
+			log(`Received an error message : ${decoded.e[0]} : ${decoded.e[1].toString('utf8')}`);
 		} else {
-			log(`Failed to handle type: ${type}`);
-			// console.log(decoded);
+			handleUndefinedType({ decoded, id, message, rinfo, type }, socket, data);
 		}
 	} catch (error) {
-		log(error);
+		log(error, true);
 	}
 };
 

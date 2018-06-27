@@ -1,7 +1,9 @@
-import { createID, encode, errorLogger } from './utils';
+import { createID, encode, errorLogger, log } from './utils';
 import queries from './packets/queries';
 
 const queryNodes = (id, socket, data) => {
+	log(`looking for new nodes`);
+
 	Object.keys(data.nodes)
 		.map((nodeID) => ({
 			...data.nodes[nodeID],
@@ -15,15 +17,31 @@ const queryNodes = (id, socket, data) => {
 			socket.send(payload, parseInt(node.port), node.address, errorLogger);
 		});
 
+	log(`Total Nodes: ${Object.keys(data.nodes).length}`);
+
 	setTimeout(() => queryNodes(id, socket, data), 10000);
 };
 
-export const crawl = (id, socket, data) => {
-	const find_nodes = encode(queries.find_node(id, createID()));
+const pingNodes = (id, socket, data) => {
+	log(`pinging nodes`);
 
-	socket.send(find_nodes, 6881, 'router.bittorrent.com', errorLogger);
+	Object.keys(data.nodes).forEach((nodeID) => {
+		const node = data.nodes[nodeID];
+		const ping = encode(queries.ping(id));
+
+		socket.send(ping, parseInt(node.port), node.address, errorLogger);
+	});
+
+	setTimeout(() => queryNodes(id, socket, data), 60000);
+};
+
+export const crawl = (id, socket, data) => {
+	const find_node = encode(queries.find_node(id, createID()));
+
+	socket.send(find_node, 6881, 'router.bittorrent.com', errorLogger);
 
 	queryNodes(id, socket, data);
+	pingNodes(id, socket, data);
 };
 
 export default crawl;

@@ -8,6 +8,14 @@ import { createToken, createTransactionID } from './../utils';
  * r: dictionary containing named returned values
  */
 
+export const announce_peer = (id) => ({
+	r: {
+		id,
+	},
+	t: createTransactionID(),
+	y: 'r',
+});
+
 export const find_node = (id, nodes) => ({
 	r: {
 		id,

@@ -1,7 +1,6 @@
-import { depactNodes } from './../utils';
-import log from 'fancy-log';
+import { depactNodes, log } from './../utils';
 
-const find_nodes = ({ decoded }, socket, data) => {
+const find_node = ({ decoded }, socket, data) => {
 	const nodes = depactNodes(decoded.r.nodes);
 
 	nodes.forEach((node) => {
@@ -19,14 +18,16 @@ const find_nodes = ({ decoded }, socket, data) => {
 };
 
 const response = ({ decoded, id, message, rinfo }, socket, data) => {
+	// log(`received a response message`);
+
 	if (decoded.r.nodes) {
-		find_nodes({ decoded, id, message, rinfo }, socket, data);
+		find_node({ decoded, id, message, rinfo }, socket, data);
 	} else if (decoded.r.token) {
 		log(`Process response type: get_peers`);
 	} else if (decoded.r.info_hash) {
 		log(`Process response type: announce_peer`);
 	} else {
-		log(`Processing response as ping`);
+		// log(`Processing response as ping`);
 	}
 };
 

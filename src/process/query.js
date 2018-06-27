@@ -1,12 +1,10 @@
-import { compactNodes, encode, errorLogger } from './../utils';
-import log from 'fancy-log';
+import { compact, compactNodes, encode, errorLogger, log } from './../utils';
 import responses from './../packets/responses';
 
-const get_peers = ({ decoded, id, rinfo }, socket, data) => {
-	const info_hash = decoded.a.info_hash.toString('hex');
-	const safeID = decoded.a.id.toString('hex');
+const addTorrent = ({ decoded, info_hash, rinfo, safeID }, socket, data) => {
 	const clients = data.torrents[info_hash] && data.torrents[info_hash].clients ? data.torrents[info_hash].clients : {};
 
+	log(`Added torrent: ${info_hash}`);
 	data.torrents[info_hash] = {
 		...data.torrents[info_hash],
 		clients: {
@@ -24,6 +22,15 @@ const get_peers = ({ decoded, id, rinfo }, socket, data) => {
 		info_hash,
 		updated: Date.now(),
 	};
+	log(`Total Torrents: ${Object.keys(data.torrents).length}`);
+};
+
+const get_peers = ({ decoded, id, rinfo }, socket, data) => {
+	const info_hash = decoded.a.info_hash.toString('hex');
+	const safeID = decoded.a.id.toString('hex');
+	const clients = data.torrents[info_hash] && data.torrents[info_hash].clients ? data.torrents[info_hash].clients : {};
+
+	addTorrent({ decoded, id, info_hash, rinfo, safeID }, socket, data);
 
 	const nodes = Object.keys(data.nodes)
 		.filter((node, index) => index < 8)
@@ -36,13 +43,34 @@ const get_peers = ({ decoded, id, rinfo }, socket, data) => {
 	socket.send(response, parseInt(rinfo.port), rinfo.address, errorLogger);
 };
 
+const find_node = ({ decoded, id, rinfo }, socket, data) => {
+	const safeID = decoded.a.target.toString('hex');
+
+	const nodes = Object.keys(data.nodes)
+		.filter((node, index) => index < 8)
+		.map((nodeID) => data.nodes[nodeID]);
+	const response = data.nodes[safeID] ? encode(responses.find_node(id, compact(data.nodes[safeID]))) : encode(responses.find_node(id, Buffer.concat(compactNodes(nodes))));
+
+	socket.send(response, parseInt(rinfo.port), rinfo.address, errorLogger);
+};
+
+const announce_peer = ({ decoded, id, rinfo }, socket, data) => {
+	const info_hash = decoded.a.info_hash.toString('hex');
+	const safeID = decoded.a.id.toString('hex');
+
+	addTorrent({ decoded, id, info_hash, rinfo, safeID }, socket, data);
+	socket.send(encode(responses.announce_peer(id)), parseInt(rinfo.port), rinfo.address, errorLogger);
+};
+
 const query = ({ decoded, id, message, rinfo }, socket, data) => {
 	const queryType = decoded.q.toString('utf8');
 
 	log(`Process query type: ${queryType}`);
 
 	if (queryType === 'find_node') {
-		// Soon
+		find_node({ decoded, id, message, rinfo }, socket, data);
+	} else if (queryType === 'announce_peer') {
+		announce_peer({ decoded, id, message, rinfo }, socket, data);
 	} else if (queryType === 'get_peers') {
 		get_peers({ decoded, id, message, rinfo }, socket, data);
 	} else if (queryType === 'ping') {
