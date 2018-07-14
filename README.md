@@ -5,9 +5,10 @@ AlphaReign DHT Scraper is a node project that joins the BitTorrent DHT network a
 ## Installation
 
 * Install Node (version 8 or greater)
-* Install pm2 globally ```npm i -g pm2```
-* Change the store in ```src/config.js``` to sqlite or mongodb
-* Run to ```pm2 start ecosystem.config.js```
+* Install pm2 globally with yarn / npm `yarn global add pm2` or `npm i -g pm2`
+* Install packages with yarn / npm `yarn` or `npm install`
+* Change the store in `src/config.js` to sqlite or mongodb
+* Run to `pm2 start ecosystem.config.js`
 
 ## Data Stores
 
