@@ -4,7 +4,7 @@ import responses from './../packets/responses';
 const addTorrent = ({ decoded, info_hash, rinfo, safeID }, socket, data) => {
 	const clients = data.torrents[info_hash] && data.torrents[info_hash].clients ? data.torrents[info_hash].clients : {};
 
-	log(`Added torrent: ${info_hash}`);
+	log(`Total: ${Object.keys(data.torrents).length} || Added torrent: ${info_hash}`);
 	data.torrents[info_hash] = {
 		...data.torrents[info_hash],
 		clients: {
@@ -22,7 +22,6 @@ const addTorrent = ({ decoded, info_hash, rinfo, safeID }, socket, data) => {
 		info_hash,
 		updated: Date.now(),
 	};
-	log(`Total Torrents: ${Object.keys(data.torrents).length}`);
 };
 
 const get_peers = ({ decoded, id, rinfo }, socket, data) => {
@@ -64,8 +63,6 @@ const announce_peer = ({ decoded, id, rinfo }, socket, data) => {
 
 const query = ({ decoded, id, message, rinfo }, socket, data) => {
 	const queryType = decoded.q.toString('utf8');
-
-	log(`Process query type: ${queryType}`);
 
 	if (queryType === 'find_node') {
 		find_node({ decoded, id, message, rinfo }, socket, data);

@@ -16,8 +16,6 @@ const addNode = ({ decoded, rinfo }, socket, data) => {
 	}
 
 	if (safeID) {
-		// log(`added node ${safeID} from ${rinfo.address}:${rinfo.port}`);
-
 		data.nodes[safeID] = {
 			...data.nodes[safeID],
 			address: rinfo.address,

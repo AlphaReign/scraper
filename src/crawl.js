@@ -2,8 +2,6 @@ import { createID, encode, errorLogger, log } from './utils';
 import queries from './packets/queries';
 
 const queryNodes = (id, socket, data) => {
-	log(`looking for new nodes`);
-
 	Object.keys(data.nodes)
 		.map((nodeID) => ({
 			...data.nodes[nodeID],
@@ -17,13 +15,12 @@ const queryNodes = (id, socket, data) => {
 			socket.send(payload, parseInt(node.port), node.address, errorLogger);
 		});
 
-	log(`Total Nodes: ${Object.keys(data.nodes).length}`);
-
 	setTimeout(() => queryNodes(id, socket, data), 10000);
 };
 
 const pingNodes = (id, socket, data) => {
 	log(`pinging nodes`);
+	log(`Total Nodes: ${Object.keys(data.nodes).length}`);
 
 	Object.keys(data.nodes).forEach((nodeID) => {
 		const node = data.nodes[nodeID];
