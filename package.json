@@ -6,15 +6,17 @@
 	},
 	"dependencies": {
 		"bencode": "^2.0.0",
-		"bitfield": "^2.0.0"
+		"bitfield": "^2.0.0",
+		"knex": "^0.15.2",
+		"sqlite3": "^4.0.2"
 	},
 	"description": "AlphaReign Torrent Engine",
 	"devDependencies": {
 		"babel-core": "^6.26.0",
+		"babel-eslint": "^8.2.2",
 		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
 		"babel-plugin-transform-object-rest-spread": "^6.26.0",
 		"babel-preset-env": "^1.6.1",
-		"babel-eslint": "^8.2.2",
 		"eslint": "^5.0.0",
 		"eslint-config-prettier": "^2.9.0",
 		"husky": "^0.14.3",
