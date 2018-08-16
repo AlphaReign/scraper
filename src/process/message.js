@@ -3,7 +3,31 @@ import { log } from './../utils';
 import query from './query';
 import response from './response';
 
-const addNode = ({ decoded, rinfo }, socket, data) => {
+const upsert = async ({ clientID, rinfo, safeID }, knex) => {
+	const nodes = await knex('node').where({ safeID });
+	const defaultData = {
+		created: Date.now(),
+		lastQueried: 0,
+		safeID,
+	};
+	const node = {
+		...(nodes.length > 0 ? nodes[0] : defaultData),
+		address: rinfo.address,
+		id: clientID,
+		port: parseInt(rinfo.port),
+		updated: Date.now(),
+	};
+
+	if (nodes.length > 0) {
+		await knex('node')
+			.where({ safeID })
+			.update(node);
+	} else {
+		await knex('node').insert(node);
+	}
+};
+
+const addNode = async ({ decoded, rinfo }, socket, knex) => {
 	let safeID;
 	let clientID;
 
@@ -16,14 +40,7 @@ const addNode = ({ decoded, rinfo }, socket, data) => {
 	}
 
 	if (safeID) {
-		data.nodes[safeID] = {
-			...data.nodes[safeID],
-			address: rinfo.address,
-			created: data.nodes[safeID] && data.nodes[safeID].created ? data.nodes[safeID].created : Date.now(),
-			id: clientID,
-			port: rinfo.port,
-			updated: Date.now(),
-		};
+		await upsert({ clientID, rinfo, safeID }, knex);
 	}
 };
 
@@ -35,21 +52,21 @@ const handleUndefinedType = ({ decoded, type }) => {
 	}
 };
 
-export const processMessage = ({ id, message, rinfo }, socket, data) => {
+export const processMessage = async ({ id, message, rinfo }, socket, knex) => {
 	try {
 		const decoded = bencode.decode(message);
 		const type = decoded.y ? decoded.y.toString('utf8') : undefined;
 
-		addNode({ decoded, id, rinfo }, socket, data);
+		await addNode({ decoded, id, rinfo }, socket, knex);
 
 		if (type === 'q') {
-			query({ decoded, id, message, rinfo }, socket, data);
+			await query({ decoded, id, message, rinfo }, socket, knex);
 		} else if (type === 'r') {
-			response({ decoded, id, message, rinfo }, socket, data);
+			await response({ decoded, id, message, rinfo }, socket, knex);
 		} else if (type === 'e') {
-			log(`Received an error message : ${decoded.e[0]} : ${decoded.e[1].toString('utf8')}`);
+			await log(`Received an error message : ${decoded.e[0]} : ${decoded.e[1].toString('utf8')}`);
 		} else {
-			handleUndefinedType({ decoded, id, message, rinfo, type }, socket, data);
+			await handleUndefinedType({ decoded, id, message, rinfo, type }, socket, knex);
 		}
 	} catch (error) {
 		log(error, true);

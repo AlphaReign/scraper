@@ -1,77 +1,93 @@
 import { compact, compactNodes, encode, errorLogger, log } from './../utils';
 import responses from './../packets/responses';
 
-const addTorrent = ({ decoded, info_hash, rinfo, safeID }, socket, data) => {
-	const clients = data.torrents[info_hash] && data.torrents[info_hash].clients ? data.torrents[info_hash].clients : {};
+const addTorrent = async ({ infohash, safeID }, socket, knex) => {
+	const clients = await knex('torrentNodeXref').where({ infohash, safeID });
 
-	log(`Total: ${Object.keys(data.torrents).length} || Added torrent: ${info_hash}`);
-	data.torrents[info_hash] = {
-		...data.torrents[info_hash],
-		clients: {
-			...clients,
-			[safeID]: {
-				...clients[safeID],
-				address: rinfo.address,
-				created: clients[safeID] && clients[safeID].created ? clients[safeID].created : Date.now(),
-				id: decoded.a.id,
-				port: rinfo.port,
-				updated: Date.now(),
-			},
-		},
-		created: data.torrents[info_hash] && data.torrents[info_hash].created ? data.torrents[info_hash].created : Date.now(),
-		info_hash,
-		updated: Date.now(),
-	};
+	if (clients.length === 0) {
+		await knex('torrentNodeXref').insert({ infohash, safeID });
+	}
+
+	const torrents = await knex('torrent').where({ infohash });
+
+	if (torrents.length > 0) {
+		await knex('torrent')
+			.update({ updated: Date.now() })
+			.where({ infohash });
+	} else {
+		await knex('torrent').insert({
+			created: Date.now(),
+			infohash,
+			updated: Date.now(),
+		});
+	}
+
+	const count = await knex('torrent').count();
+
+	log(`Total: ${count[0]['count(*)']} || Added torrent: ${infohash}`);
 };
 
-const get_peers = ({ decoded, id, rinfo }, socket, data) => {
-	const info_hash = decoded.a.info_hash.toString('hex');
+const get_peers = async ({ decoded, id, rinfo }, socket, knex) => {
+	const infohash = decoded.a.info_hash.toString('hex');
 	const safeID = decoded.a.id.toString('hex');
-	const clients = data.torrents[info_hash] && data.torrents[info_hash].clients ? data.torrents[info_hash].clients : {};
+	const matchingClients = await knex('torrentNodeXref').where({ infohash });
 
-	addTorrent({ decoded, id, info_hash, rinfo, safeID }, socket, data);
+	await addTorrent({ decoded, id, infohash, rinfo, safeID }, socket, knex);
 
-	const nodes = Object.keys(data.nodes)
-		.filter((node, index) => index < 8)
-		.map((nodeID) => data.nodes[nodeID]);
+	const nodes =
+		matchingClients.length > 0
+			? await knex('node').whereIn('safeID', matchingClients.map((record) => record.safeID))
+			: await knex('node').limit(8);
 	const response =
-		Object.keys(clients).length > 0
-			? encode(responses.get_peers(id, compactNodes(Object.keys(clients).map((nodeID) => clients[nodeID]))))
+		matchingClients.length > 0
+			? encode(responses.get_peers(id, compactNodes(nodes)))
 			: encode(responses.get_peers(id, undefined, Buffer.concat(compactNodes(nodes))));
 
-	socket.send(response, parseInt(rinfo.port), rinfo.address, errorLogger);
+	socket.send(response, rinfo.port, rinfo.address, errorLogger);
 };
 
-const find_node = ({ decoded, id, rinfo }, socket, data) => {
+const find_node = async ({ decoded, id, rinfo }, socket, knex) => {
 	const safeID = decoded.a.target.toString('hex');
 
-	const nodes = Object.keys(data.nodes)
-		.filter((node, index) => index < 8)
-		.map((nodeID) => data.nodes[nodeID]);
-	const response = data.nodes[safeID] ? encode(responses.find_node(id, compact(data.nodes[safeID]))) : encode(responses.find_node(id, Buffer.concat(compactNodes(nodes))));
+	const matchingNodes = await knex('node').where({ safeID });
 
-	socket.send(response, parseInt(rinfo.port), rinfo.address, errorLogger);
+	if (matchingNodes.length > 0) {
+		const response = encode(responses.find_node(id, compact(matchingNodes[0])));
+
+		socket.send(response, parseInt(rinfo.port), rinfo.address, errorLogger);
+	} else {
+		const nodes = await knex('node')
+			.limit(8)
+			.orderBy('updated', 'DESC');
+		const response = encode(responses.find_node(id, Buffer.concat(compactNodes(nodes))));
+
+		socket.send(response, parseInt(rinfo.port), rinfo.address, errorLogger);
+	}
 };
 
-const announce_peer = ({ decoded, id, rinfo }, socket, data) => {
+const announce_peer = async ({ decoded, id, rinfo }, socket, knex) => {
 	const info_hash = decoded.a.info_hash.toString('hex');
 	const safeID = decoded.a.id.toString('hex');
 
-	addTorrent({ decoded, id, info_hash, rinfo, safeID }, socket, data);
+	await addTorrent({ decoded, id, info_hash, rinfo, safeID }, socket, knex);
 	socket.send(encode(responses.announce_peer(id)), parseInt(rinfo.port), rinfo.address, errorLogger);
 };
 
-const query = ({ decoded, id, message, rinfo }, socket, data) => {
+const ping = ({ id, rinfo }, socket) => {
+	socket.send(encode(responses.ping(id)), parseInt(rinfo.port), rinfo.address, errorLogger);
+};
+
+const query = async ({ decoded, id, message, rinfo }, socket, knex) => {
 	const queryType = decoded.q.toString('utf8');
 
 	if (queryType === 'find_node') {
-		find_node({ decoded, id, message, rinfo }, socket, data);
+		await find_node({ decoded, id, message, rinfo }, socket, knex);
 	} else if (queryType === 'announce_peer') {
-		announce_peer({ decoded, id, message, rinfo }, socket, data);
+		await announce_peer({ decoded, id, message, rinfo }, socket, knex);
 	} else if (queryType === 'get_peers') {
-		get_peers({ decoded, id, message, rinfo }, socket, data);
+		await get_peers({ decoded, id, message, rinfo }, socket, knex);
 	} else if (queryType === 'ping') {
-		socket.send(encode(responses.ping(id)), parseInt(rinfo.port), rinfo.address, errorLogger);
+		await ping({ decoded, id, message, rinfo }, socket, knex);
 	} else {
 		log(`Failed to handle query type: ${queryType}`);
 	}

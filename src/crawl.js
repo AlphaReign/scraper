@@ -1,44 +1,42 @@
 import { createID, encode, errorLogger, log } from './utils';
 import queries from './packets/queries';
 
-const queryNodes = (id, socket, data) => {
-	Object.keys(data.nodes)
-		.map((nodeID) => ({
-			...data.nodes[nodeID],
-			lastQueried: data.nodes[nodeID].lastQueried || 0,
-		}))
-		.sort((a, b) => a.lastQueried - b.lastQueried)
-		.filter((node, index) => index < 100)
-		.forEach((node) => {
-			const payload = encode(queries.find_node(id, createID()));
+const queryNodes = async (id, socket, knex) => {
+	const nodes = await knex('node')
+		.limit(100)
+		.orderBy('lastQueried', 'ASC');
 
-			socket.send(payload, parseInt(node.port), node.address, errorLogger);
-		});
+	nodes.forEach((node) => {
+		const payload = encode(queries.find_node(id, createID()));
 
-	setTimeout(() => queryNodes(id, socket, data), 10000);
-};
-
-const pingNodes = (id, socket, data) => {
-	log(`pinging nodes`);
-	log(`Total Nodes: ${Object.keys(data.nodes).length}`);
-
-	Object.keys(data.nodes).forEach((nodeID) => {
-		const node = data.nodes[nodeID];
-		const ping = encode(queries.ping(id));
-
-		socket.send(ping, parseInt(node.port), node.address, errorLogger);
+		socket.send(payload, node.port, node.address, errorLogger);
 	});
 
-	setTimeout(() => queryNodes(id, socket, data), 60000);
+	setTimeout(() => queryNodes(id, socket, knex), 10000);
 };
 
-export const crawl = (id, socket, data) => {
+const pingNodes = async (id, socket, knex) => {
+	const nodes = await knex('node');
+
+	log(`pinging nodes`);
+	log(`Total Nodes: ${nodes.length}`);
+
+	nodes.forEach((node) => {
+		const ping = encode(queries.ping(id));
+
+		socket.send(ping, node.port, node.address, errorLogger);
+	});
+
+	setTimeout(() => queryNodes(id, socket, knex), 60000);
+};
+
+export const crawl = (id, socket, knex) => {
 	const find_node = encode(queries.find_node(id, createID()));
 
 	socket.send(find_node, 6881, 'router.bittorrent.com', errorLogger);
 
-	queryNodes(id, socket, data);
-	pingNodes(id, socket, data);
+	queryNodes(id, socket, knex);
+	pingNodes(id, socket, knex);
 };
 
 export default crawl;

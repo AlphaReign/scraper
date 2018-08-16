@@ -1,27 +1,42 @@
 import { depactNodes, log } from './../utils';
 
-const find_node = ({ decoded }, socket, data) => {
-	const nodes = depactNodes(decoded.r.nodes);
+const upsert = async ({ clientID, node, safeID }, knex) => {
+	const nodes = await knex('node').where({ safeID });
+	const defaultData = {
+		created: Date.now(),
+		lastQueried: 0,
+		safeID,
+	};
+	const nodeData = {
+		...(nodes.length > 0 ? nodes[0] : defaultData),
+		address: node.address,
+		id: clientID,
+		port: parseInt(node.port),
+		updated: Date.now(),
+	};
 
-	nodes.forEach((node) => {
-		const safeID = node.id.toString('hex');
-
-		data.nodes[safeID] = {
-			...data.nodes[safeID],
-			address: node.address,
-			created: data.nodes[safeID] && data.nodes[safeID].created ? data.nodes[safeID].created : Date.now(),
-			id: decoded.r.id,
-			port: node.port,
-			updated: Date.now(),
-		};
-	});
+	if (nodes.length > 0) {
+		await knex('node')
+			.where({ safeID })
+			.update(nodeData);
+	} else {
+		await knex('node').insert(nodeData);
+	}
 };
 
-const response = ({ decoded, id, message, rinfo }, socket, data) => {
+const find_node = async ({ decoded }, socket, knex) => {
+	const nodes = depactNodes(decoded.r.nodes);
+
+	await Promise.all(
+		nodes.map((node) => upsert({ clientID: decoded.r.id, node, safeID: node.id.toString('hex') }, knex)),
+	);
+};
+
+const response = async ({ decoded, id, message, rinfo }, socket, knex) => {
 	// log(`received a response message`);
 
 	if (decoded.r.nodes) {
-		find_node({ decoded, id, message, rinfo }, socket, data);
+		await find_node({ decoded, id, message, rinfo }, socket, knex);
 	} else if (decoded.r.token) {
 		log(`Process response type: get_peers`);
 	} else if (decoded.r.info_hash) {
