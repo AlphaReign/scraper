@@ -1,26 +1,16 @@
 exports.up = async (knex) => {
-	await knex.schema.createTable('node', (table) => {
-		table.string('safeID').primary();
-		table.string('id');
-		table.string('address');
-		table.int('port');
-		table.int('lastQueried');
-		table.int('created');
-		table.int('updated');
-	});
-	await knex.schema.createTable('torrent', (table) => {
+	await knex.schema.createTable('torrents', (table) => {
 		table.string('infohash').primary();
-		table.int('created');
-		table.int('updated');
-	});
-	await knex.schema.createTable('torrentNodeXref', (table) => {
-		table.string('safeID');
-		table.string('infohash');
+		table.string('name');
+		table.string('files');
+		table.string('tags');
+		table.string('type');
+		table.int('length');
+		table.dateTime('created');
+		table.dateTime('updated');
 	});
 };
 
 exports.down = async (knex) => {
-	await knex.schema.dropTableIfExists('node');
-	await knex.schema.dropTableIfExists('torrent');
-	await knex.schema.dropTableIfExists('torrentNodeXref');
+	await knex.schema.dropTableIfExists('torrents');
 };
