@@ -38,6 +38,7 @@
 	"scripts": {
 		"clean": "yarn lint && yarn prettify",
 		"lint": "eslint src/*.js --fix",
+		"precommit": "lint-staged",
 		"prettify": "prettier --config ./.prettierrc.json --write \"src/*.js\"",
 		"staged": "lint-staged",
 		"start": "node ./index.js",
