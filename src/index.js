@@ -1,26 +1,34 @@
-import { createID, log } from './utils';
-import crawl from './crawl';
-import dgram from 'dgram';
-import processMessage from './process/message';
+const config = require('./../config');
+const crawler = require('./crawler');
+const parser = require('./parser');
+const tracker = require('./tracker');
+const knex = require('knex')(config.db);
 
-const id = createID();
-const socket = dgram.createSocket('udp4');
-const knex = require('knex')({
-	client: 'sqlite3',
-	connection: {
-		filename: './db.sqlite3',
-	},
-});
+const getCount = async () => {
+	const [count] = await knex('torrents').count('infohash');
+	const [count2] = await knex('torrents')
+		.count('infohash')
+		.whereNull('trackerUpdated');
 
-socket.on('error', (error) => log(error));
+	console.log(`Total Torrents: ${count['count(`infohash`)']}`);
+	console.log(`Torrents without Tracker: ${count2['count(`infohash`)']}`);
+	setTimeout(() => getCount(), 10000);
+};
 
-socket.on('message', (message, rinfo) => processMessage({ id, message, rinfo }, socket, knex));
+const addTorrent = async (infohash, rinfo) => {
+	try {
+		const records = await knex('torrents').where({ infohash: infohash.toString('hex') });
 
-socket.on('listening', () => {
-	const address = socket.address();
+		if (records.length === 0 || !records[0].name) {
+			parser(infohash, rinfo, knex);
+		}
+	} catch (error) {
+		if (config.debug) {
+			console.log(error);
+		}
+	}
+};
 
-	log(`client listening ${address.address}:${address.port}`, true);
-	crawl(id, socket, knex);
-});
-
-socket.bind(6881);
+crawler(addTorrent);
+tracker(knex);
+getCount();

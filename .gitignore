@@ -1,6 +1,4 @@
 /node_modules
+yarn.lock
 sftp-config.json
 .DS_Store
-data.json
-.vscode/sftp.json
-/db.sqlite3

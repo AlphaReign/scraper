@@ -2,45 +2,49 @@
 	"author": {
 		"email": "prefinem@gmail.com",
 		"name": "Prefinem",
-		"url": "http://prefinem.com"
+		"url": "https://prefinem.com"
 	},
 	"dependencies": {
-		"bencode": "^2.0.0",
-		"bitfield": "^2.0.0",
+		"bencode": "^0.7.0",
+		"bitfield": "^1.1.2",
+		"bittorrent-tracker": "^9.10.1",
 		"knex": "^0.15.2",
+		"pm2": "^3.1.3",
 		"sqlite3": "^4.0.2"
 	},
-	"description": "AlphaReign Torrent Engine",
+	"description": "DHT Torrent Scraper",
 	"devDependencies": {
 		"babel-core": "^6.26.0",
-		"babel-eslint": "^8.2.2",
+		"babel-eslint": "^9.0.0",
 		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
 		"babel-plugin-transform-object-rest-spread": "^6.26.0",
 		"babel-preset-env": "^1.6.1",
-		"eslint": "^5.0.0",
-		"eslint-config-prettier": "^2.9.0",
-		"husky": "^0.14.3",
-		"pkg-ok": "^2.1.0",
-		"prettier": "1.13.5",
-		"pretty-quick": "^1.6.0"
+		"eslint": "^5.3.0",
+		"eslint-config-prettier": "^3.0.1",
+		"lint-staged": "^7.3.0",
+		"prettify": "^0.1.7"
 	},
-	"engines": {
-		"node": ">=8.10"
-	},
-	"keywords": [
-		"dht",
-		"scraper",
-		"torrent"
-	],
+	"keywords": [],
 	"license": "MIT",
+	"lint-staged": {
+		"*.js": [
+			"eslint --fix",
+			"prettier --config ./.prettierrc.json --write",
+			"jest --bail --findRelatedTests",
+			"git add"
+		]
+	},
 	"name": "alphareign",
 	"scripts": {
 		"clean": "yarn lint && yarn prettify",
 		"lint": "eslint src/*.js --fix",
-		"precommit": "yarn lint && pretty-quick --staged",
-		"prepublishOnly": "yarn clean && yarn compile && pkg-ok",
 		"prettify": "prettier --config ./.prettierrc.json --write \"src/*.js\"",
-		"start": "node ./index.js"
+		"staged": "lint-staged",
+		"start": "node ./index.js",
+		"old": "node ./old.js",
+		"migrate": "./node_modules/.bin/knex migrate:latest",
+		"upgrade": "yarn migrate",
+		"pm2": "./node_modules/.bin/pm2 start ecosystem.config.js"
 	},
-	"version": "2.0.0"
+	"version": "1.0.1"
 }
