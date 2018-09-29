@@ -1,22 +1,22 @@
 /* eslint-disable */
 'use strict';
 
-var stream = require('stream');
-var crypto = require('crypto');
-var util = require('util');
+const stream = require('stream');
+const crypto = require('crypto');
+const util = require('util');
 
-var BitField = require('bitfield');
-var bencode = require('bencode');
+const BitField = require('bitfield');
+const bencode = require('bencode');
 
-var BT_RESERVED = new Buffer([0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x01]);
-var BT_PROTOCOL = new Buffer('BitTorrent protocol');
-var PIECE_LENGTH = Math.pow(2, 14);
-var MAX_METADATA_SIZE = 10000000;
-var BITFIELD_GROW = 1000;
-var EXT_HANDSHAKE_ID = 0;
-var BT_MSG_ID = 20;
+const BT_RESERVED = new Buffer([0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x01]);
+const BT_PROTOCOL = new Buffer('BitTorrent protocol');
+const PIECE_LENGTH = Math.pow(2, 14);
+const MAX_METADATA_SIZE = 10000000;
+const BITFIELD_GROW = 1000;
+const EXT_HANDSHAKE_ID = 0;
+const BT_MSG_ID = 20;
 
-var Wire = function(infohash) {
+const Wire = function(infohash) {
 	stream.Duplex.call(this);
 
 	this._bitfield = new BitField(0, { grow: BITFIELD_GROW });
