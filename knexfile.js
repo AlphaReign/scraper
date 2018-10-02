@@ -1,10 +1,3 @@
-// Update with your config settings.
+const config = require('./config');
 
-module.exports = {
-	development: {
-		client: 'sqlite3',
-		connection: {
-			filename: './db.sqlite3',
-		},
-	},
-};
+module.exports = config.db;
