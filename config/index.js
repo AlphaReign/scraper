@@ -25,6 +25,12 @@ const config = {
 	},
 	filters,
 	formats,
+	search: {
+		// Seconds between every bulk insert
+		frequency: 60,
+		// Amount of torrents to update in elasticsearch at once
+		limit: 1000,
+	},
 	tags,
 	tracker: {
 		// Minutes before we should try and update a torrent again
