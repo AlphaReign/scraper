@@ -20,7 +20,7 @@ const getType = (names) => {
 		(result, name) =>
 			Object.keys(config.formats)
 				.filter((key) => {
-					const ext = name.split('.').pop();
+					const ext = name ? name.split('.').pop() : '';
 
 					return config.formats[key].find((format) => format === ext);
 				})

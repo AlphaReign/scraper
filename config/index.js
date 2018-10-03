@@ -12,11 +12,21 @@ const config = {
 		port: 6881,
 	},
 	db: {
-		client: 'sqlite3',
+		/*
+		 * SQLITE DB
+		 * 	client: 'sqlite3',
+		 * 	connection: {
+		 * 		filename: './db.sqlite3',
+		 * 	},
+		 * 	useNullAsDefault: true,
+		 */
+		client: 'mysql',
 		connection: {
-			filename: './db.sqlite3',
+			database: 'alphareign',
+			host: '127.0.0.1',
+			password: 'alphareign',
+			user: 'root',
 		},
-		useNullAsDefault: true,
 	},
 	debug: false,
 	elasticsearch: {

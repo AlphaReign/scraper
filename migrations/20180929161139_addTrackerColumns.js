@@ -1,7 +1,7 @@
 exports.up = async (knex) => {
 	await knex.schema.alterTable('torrents', (table) => {
-		table.int('seeders');
-		table.int('leechers');
+		table.integer('seeders');
+		table.integer('leechers');
 		table.dateTime('trackerUpdated');
 	});
 };
@@ -13,4 +13,3 @@ exports.down = async (knex) => {
 		table.dropColumn('trackerUpdated');
 	});
 };
-

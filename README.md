@@ -6,18 +6,19 @@ More Info Here: https://github.com/AlphaReign/AlphaReign
 
 ## Installation
 
-1.  Download or clone the repository
-2.  Install node
-3.  Install yarn
-4.  Install elasticsearch
-5.  Install pm2 globally (`yarn global install pm2`)
-6.  Update config.json
-7.  Run yarn migrate (`yarn migrate`)
-8.  Start pm2 with Ecosystem file (`pm2 start ecosystem.config.js`)
+-   Download or clone the repository
+-   Install node
+-   Install yarn
+-   Install elasticsearch
+-   Install mysql / mariadb / sqlite
+-   Install pm2 globally (`yarn global install pm2`)
+-   Update config.json (ElasticSearch variables if on a different host, Database variables)
+-   Run yarn migrate (`yarn migrate`)
+-   Start pm2 with Ecosystem file (`pm2 start ecosystem.config.js`)
 
 ## Updating
 
-1.  Stop running pm2 instances (`pm2 stop all`)
-2.  Download or pull the repository
-3.  Run yarn migrate (`yarn migrate`)
-4.  Start pm2 (`pm2 start all`)
+-   Stop running pm2 instances (`pm2 stop all`)
+-   Download or pull the repository
+-   Run yarn migrate (`yarn migrate`)
+-   Start pm2 (`pm2 start all`)
