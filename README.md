@@ -4,6 +4,10 @@ AlphaReigns DHT Scraper, includes peer updater and categorizer
 
 More Info Here: https://github.com/AlphaReign/AlphaReign
 
+## Notes
+
+This scrape relies on storing the torrent data in a database. I recommend either mariadb or mysql. It will work with sqlite if you wish to have a portable database but doing so will require a high level of disk usage as sqlite writes to a single file.
+
 ## Installation
 
 -   Download or clone the repository
