@@ -5,6 +5,7 @@
 		"url": "https://prefinem.com"
 	},
 	"dependencies": {
+		"@babel/register": "^7.0.0",
 		"bencode": "^0.7.0",
 		"bitfield": "^1.1.2",
 		"bittorrent-tracker": "^9.10.1",
@@ -16,15 +17,21 @@
 	},
 	"description": "DHT Torrent Scraper",
 	"devDependencies": {
-		"babel-core": "^6.26.0",
-		"babel-eslint": "^9.0.0",
-		"babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
-		"babel-plugin-transform-object-rest-spread": "^6.26.0",
-		"babel-preset-env": "^1.6.1",
-		"eslint": "^5.3.0",
+		"@babel/cli": "^7.1.0",
+		"@babel/core": "^7.1.0",
+		"@babel/plugin-proposal-object-rest-spread": "^7.0.0",
+		"@babel/preset-env": "^7.1.0",
+		"babel-eslint": "^10.0.0",
+		"eslint": "^5.6.0",
 		"eslint-config-prettier": "^3.0.1",
+		"husky": "^1.0.0",
 		"lint-staged": "^7.3.0",
-		"prettify": "^0.1.7"
+		"prettier": "^1.14.3"
+	},
+	"husky": {
+		"hooks": {
+			"pre-commit": "yarn staged"
+		}
 	},
 	"keywords": [],
 	"license": "MIT",
@@ -40,14 +47,13 @@
 	"scripts": {
 		"clean": "yarn lint && yarn prettify",
 		"lint": "eslint src/*.js --fix",
-		"precommit": "lint-staged",
-		"prettify": "prettier --config ./.prettierrc.json --write \"src/*.js\"",
-		"staged": "lint-staged",
-		"start": "node ./index.js",
-		"old": "node ./old.js",
+		"loader": "node ./loader.js",
 		"migrate": "./node_modules/.bin/knex migrate:latest",
-		"upgrade": "yarn migrate",
-		"pm2": "./node_modules/.bin/pm2 start ecosystem.config.js"
+		"pm2": "./node_modules/.bin/pm2 start ecosystem.config.js",
+		"prettify": "prettier --config ./.prettierrc.json --write \"src/*.js\"",
+		"scraper": "node ./scraper.js",
+		"staged": "lint-staged",
+		"upgrade": "yarn migrate"
 	},
-	"version": "1.0.1"
+	"version": "2.0.0"
 }

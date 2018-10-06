@@ -12,17 +12,12 @@
 		"array-bracket-newline": "off",
 		"array-element-newline": "off",
 		"brace-style": "off",
-		"camelcase": "off",
 		"capitalized-comments": "off",
 		"class-methods-use-this": "off",
-		"comma-dangle": ["error", "always-multiline"],
-		"dot-location": ["error", "property"],
 		"eol-last": "off",
 		"global-require": "off",
 		"id-length": "off",
-		"indent": ["error", "tab"],
 		"init-declarations": "off",
-		"max-len": ["error", 180],
 		"max-statements-per-line": [
 			"error",
 			{
@@ -30,18 +25,6 @@
 			}
 		],
 		"multiline-ternary": "off",
-		"newline-per-chained-call": [
-			"error",
-			{
-				"ignoreChainWithDepth": 3
-			}
-		],
-		"no-confusing-arrow": [
-			"error",
-			{
-				"allowParens": true
-			}
-		],
 		"no-console": "off",
 		"no-extra-parens": "off",
 		"no-magic-numbers": "off",
@@ -50,7 +33,6 @@
 		"no-tabs": "off",
 		"no-ternary": "off",
 		"no-undefined": "off",
-		"object-curly-spacing": ["error", "always"],
 		"one-var": "off",
 		"padded-blocks": "off",
 		"padding-line-between-statements": [
