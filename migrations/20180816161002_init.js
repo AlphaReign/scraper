@@ -2,7 +2,7 @@ exports.up = async (knex) => {
 	await knex.schema.createTable('torrents', (table) => {
 		table.string('infohash', 40).primary();
 		table.string('name');
-		table.string('files');
+		table.text('files');
 		table.string('tags');
 		table.string('type');
 		table.integer('length');

@@ -2,7 +2,6 @@ const config = require('./../config');
 const crawler = require('./crawler');
 const parser = require('./parser');
 const tracker = require('./tracker');
-// const loader = require('./loader');
 const knex = require('knex')(config.db);
 
 const getCount = async () => {
@@ -36,5 +35,4 @@ const addTorrent = async (infohash, rinfo) => {
 
 crawler(addTorrent);
 tracker(knex);
-// loader(knex);
 getCount();

@@ -1,8 +1,12 @@
 module.exports = {
 	apps: [
 		{
-			name: 'AlphaReign',
-			script: 'index.js',
+			name: 'scraper',
+			script: 'scraper.js',
+		},
+		{
+			name: 'loader',
+			script: 'loader.js',
 		},
 	],
 };
