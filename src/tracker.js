@@ -8,6 +8,7 @@ const updateRecord = async (knex, record) => {
 	await knex('torrents')
 		.update({
 			leechers: record.incomplete,
+			searchUpdate: false,
 			seeders: record.complete,
 			trackerUpdated: new Date(),
 		})
