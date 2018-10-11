@@ -16,7 +16,7 @@ This scrape relies on storing the torrent data in a database. I recommend either
 -   Install elasticsearch
 -   Install mysql / mariadb / sqlite
 -   Install pm2 globally (`yarn global add pm2`)
--   Update config.json (ElasticSearch variables if on a different host, Database variables)
+-   Update config/index.js (ElasticSearch variables if on a different host, Database variables)
 -   Run yarn (`yarn`)
 -   Run yarn migrate (`yarn migrate`)
 -   Start pm2 with Ecosystem file (`pm2 start ecosystem.config.js`)
