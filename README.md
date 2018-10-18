@@ -11,7 +11,7 @@ This scrape relies on storing the torrent data in a database. I recommend either
 ## Installation
 
 -   Download or clone the repository
--   Install node
+-   Install node (Version 8 Required.  Higher versions might work)
 -   Install yarn
 -   Install elasticsearch
 -   Install mysql / mariadb / sqlite
