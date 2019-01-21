@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const config = require('./../config');
 const elasticsearch = require('elasticsearch');
 
@@ -26,7 +27,7 @@ const parseRecord = (record) => {
 		parsedRecord.files = record.files ? JSON.parse(record.files) : [];
 		parsedRecord.files = parsedRecord.files.map((file) => ({
 			length: file.length,
-			path: file.path,
+			path: file.path.join('/'),
 		}));
 	} catch (error) {
 		// Do nothing - files is too long
