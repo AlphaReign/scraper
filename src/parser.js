@@ -80,7 +80,7 @@ const upsertTorrent = async (torrent, knex) => {
 const buildRecord = (names, knex, { files, infohash, length, name }) => {
 	try {
 		const type = getType(names);
-		const tags = getTags(names, type);
+		const tags = [...new Set(getTags(names, type))];
 
 		const record = {
 			files: JSON.stringify(files),
