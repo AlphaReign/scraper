@@ -14,7 +14,7 @@ const clean = (data) => {
 	return data;
 };
 
-const filterTorrent = (names) => names.find((name = '') => config.filters.indexOf(name.toLowerCase()) > -1);
+const filterTorrent = (names) => names.find((name = '') => config.filters.findIndex(element => element.includes(name.toLowerCase())) > -1);
 const getType = (names) => {
 	const weights = names.reduce(
 		(result, name) =>
