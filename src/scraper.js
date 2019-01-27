@@ -1,30 +1,74 @@
+const Wire = require('./wire');
 const config = require('./../config');
-const crawler = require('./crawler');
-const parser = require('./parser');
-const tracker = require('./tracker');
-const knex = require('knex')(config.db);
+const net = require('net');
 
-const getCount = async () => {
-	const [count] = await knex('torrents').count('infohash');
-	const [count2] = await knex('torrents')
-		.count('infohash')
-		.whereNull('trackerUpdated');
-	const [count3] = await knex('torrents')
-		.count('infohash')
-		.whereNull('searchUpdated');
+const clean = (data) => {
+	if (Buffer.isBuffer(data)) {
+		return data.toString();
+	} else if (Array.isArray(data)) {
+		return data.map(clean);
+	} else if (typeof data === 'object') {
+		return Object.keys(data).reduce((result, key) => Object.assign(result, { [key]: clean(data[key]) }), {});
+	}
 
-	console.log(`Total Torrents: ${count['count(`infohash`)']}`);
-	console.log(`Torrents without Tracker: ${count2['count(`infohash`)']}`);
-	console.log(`Torrents not in Search: ${count3['count(`infohash`)']}`);
-	setTimeout(() => getCount(), 10000);
+	return data;
 };
 
-const addTorrent = async (infohash, rinfo) => {
-	try {
-		const records = await knex('torrents').where({ infohash: infohash.toString('hex') });
+const filterTorrent = (names) => names.filter((name) => config.filters.findIndex(element => name.toLowerCase().includes(element)) > -1);
+const getType = (names) => {
+	const weights = names.reduce(
+		(result, name) =>
+			Object.keys(config.formats)
+				.filter((key) => {
+					const ext = name ? name.split('.').pop() : '';
 
-		if (records.length === 0 || !records[0].name) {
-			parser(infohash, rinfo, knex);
+					return config.formats[key].find((format) => format === ext);
+				})
+				.reduce(
+					(weight, type) => Object.assign(weight, { [type]: weight[type] ? weight[type] + 1 : 1 }),
+					result,
+				),
+		{},
+	);
+
+	return Object.keys(weights).reduce(
+		(result, type) => (result && weights[result] > weights[type] ? result : type),
+		'',
+	);
+};
+const getTags = (names, type) =>
+	names.reduce((result, name) => {
+		const tags = config.tags
+			.filter((tag) => {
+				if (tag.type !== type) {
+					return false;
+				} else if (tag.includes && name.indexOf(tag.includes) > -1) {
+					return true;
+				} else if (tag.match && name.match(tag.match)) {
+					return true;
+				}
+				return false;
+			})
+			.map(({ tag }) => tag);
+
+		return result.concat(tags);
+	}, []);
+
+const upsertTorrent = async (torrent, knex) => {
+	try {
+		const records = await knex('torrents').where({ infohash: torrent.infohash });
+
+		if (config.debug) {
+			console.log(`${torrent.infohash} - ${records.length > 0 ? 'Updated' : 'Inserted'}`);
+		}
+		if (records.length > 0) {
+			await knex('torrents')
+				.update(Object.assign(torrent, { updated: new Date() }))
+				.where({ infohash: torrent.infohash });
+		} else {
+			await knex('torrents')
+				.insert(Object.assign(torrent, { created: new Date(), updated: new Date() }))
+				.where({ infohash: torrent.infohash });
 		}
 	} catch (error) {
 		if (config.debug) {
@@ -33,6 +77,73 @@ const addTorrent = async (infohash, rinfo) => {
 	}
 };
 
-crawler(addTorrent);
-tracker(knex);
-getCount();
+const buildRecord = (names, knex, { files, infohash, length, name }) => {
+	try {
+		const type = getType(names);
+		const tags = [...new Set(getTags(names, type))];
+
+		const record = {
+			files: JSON.stringify(files),
+			infohash: infohash.toString('hex'),
+			length: length || files.reduce((result, { length: fileLength }) => result + fileLength, 0),
+			name,
+			tags: tags.join(','),
+			type,
+		};
+
+		upsertTorrent(record, knex);
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+const onMetadata = (metadata, infohash, knex) => {
+	try {
+		const { info = {} } = clean(metadata);
+		const { files = [], length, name } = info;
+		const names = files.map(({ path }) => (Array.isArray(path) ? path.join('/') : path)).concat(name);
+		const invalid = filterTorrent(names);
+console.log(invalid)
+if (invalid) {
+buildRecord(invalid, knex, { files, infohash, length, name });
+}
+	} catch (error) {
+		console.log(error);
+	}
+};
+
+const getMetadata = (infohash, rinfo, knex) => {
+	const socket = new net.Socket();
+
+	socket.setTimeout(config.timeout || 5000);
+	socket.connect(
+		rinfo.port,
+		rinfo.address,
+		() => {
+			const wire = new Wire(infohash);
+
+			socket.pipe(wire).pipe(socket);
+
+			wire.on('metadata', (metadata, hash) => {
+				onMetadata(metadata, hash, knex);
+				socket.destroy();
+			});
+
+			wire.on('fail', () => {
+				socket.destroy();
+			});
+
+			wire.sendHandshake();
+		},
+	);
+
+	socket.on('error', () => {
+		socket.destroy();
+	});
+
+	socket.on('timeout', () => {
+		socket.destroy();
+	});
+};
+
+module.exports = getMetadata;
