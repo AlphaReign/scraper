@@ -1,38 +1,46 @@
 {
 	"env": {
+		"browser": true,
 		"es6": true,
 		"node": true
 	},
-	"extends": ["eslint:all", "prettier"],
-	"parser": "babel-eslint",
+	"extends": ["eslint:all", "prettier", "prettier/react", "plugin:jest/recommended"],
 	"parserOptions": {
+		"ecmaFeatures": {
+			"jsx": true
+		},
+		"ecmaVersion": 10,
 		"sourceType": "module"
 	},
+	"plugins": ["jest"],
 	"rules": {
-		"array-bracket-newline": "off",
 		"array-element-newline": "off",
-		"brace-style": "off",
 		"capitalized-comments": "off",
 		"class-methods-use-this": "off",
 		"eol-last": "off",
+		"func-style": "off",
 		"global-require": "off",
 		"id-length": "off",
 		"init-declarations": "off",
-		"max-statements-per-line": [
-			"error",
-			{
-				"max": 2
-			}
-		],
+		"lines-between-class-members": "off",
+		"multiline-comment-style": "off",
 		"multiline-ternary": "off",
 		"no-console": "off",
 		"no-extra-parens": "off",
+		"no-invalid-this": "off",
 		"no-magic-numbers": "off",
-		"no-process-env": "off",
+		"no-shadow": "off",
 		"no-sync": "off",
 		"no-tabs": "off",
 		"no-ternary": "off",
 		"no-undefined": "off",
+		"no-unused-expressions": [
+			"error",
+			{
+				"allowShortCircuit": true,
+				"allowTernary": true
+			}
+		],
 		"one-var": "off",
 		"padded-blocks": "off",
 		"padding-line-between-statements": [
@@ -51,11 +59,6 @@
 		"quote-props": "off",
 		"quotes": "off",
 		"radix": "off",
-		"valid-jsdoc": [
-			"error",
-			{
-				"requireReturn": false
-			}
-		]
+		"require-jsdoc": "off"
 	}
 }
