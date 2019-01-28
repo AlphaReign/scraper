@@ -104,7 +104,6 @@ const onMetadata = (metadata, infohash, knex) => {
 		const names = files.map(({ path }) => (Array.isArray(path) ? path.join('/') : path)).concat(name);
 		const invalid = filterTorrent(names);
 if (!invalid.length>0){
-	console.log(invalid)
 buildRecord(invalid, knex, { files, infohash, length, name });
 }
 	} catch (error) {
