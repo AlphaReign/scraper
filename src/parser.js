@@ -14,7 +14,8 @@ const clean = (data) => {
 	return data;
 };
 
-const filterTorrent = (names) => names.filter((name) => config.filters.findIndex(element => name.toLowerCase().includes(element)) > -1);
+const filterTorrent = (names) =>
+	names.filter((name) => config.filters.findIndex((element) => name.toLowerCase().includes(element)) > -1);
 const getType = (names) => {
 	const weights = names.reduce(
 		(result, name) =>
@@ -77,7 +78,7 @@ const upsertTorrent = async (torrent, knex) => {
 	}
 };
 
-const buildRecord = (names, knex, { files, infohash, length, name }) => {
+const buildRecord = (names, knex, { files, infohash, name }) => {
 	try {
 		const type = getType(names);
 		const tags = [...new Set(getTags(names, type))];
@@ -85,7 +86,7 @@ const buildRecord = (names, knex, { files, infohash, length, name }) => {
 		const record = {
 			files: JSON.stringify(files),
 			infohash: infohash.toString('hex'),
-			length: length || files.reduce((result, { length: fileLength }) => result + fileLength, 0),
+			length: files.reduce((result, { length: fileLength }) => result + fileLength, 0),
 			name,
 			tags: tags.join(','),
 			type,
@@ -103,10 +104,11 @@ const onMetadata = (metadata, infohash, knex) => {
 		const { files = [], length, name } = info;
 		const names = files.map(({ path }) => (Array.isArray(path) ? path.join('/') : path)).concat(name);
 		const invalid = filterTorrent(names);
-if (invalid.length>0){
-	console.log(invalid)
-buildRecord(invalid, knex, { files, infohash, length, name });
-}
+		const filesWithOriginal = name && length ? [{ length, path: name }, ...files] : files;
+
+		if (!invalid.length > 0) {
+			buildRecord(names, knex, { files: filesWithOriginal, infohash, name });
+		}
 	} catch (error) {
 		console.log(error);
 	}
