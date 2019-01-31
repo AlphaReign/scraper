@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-const config = require('./../config');
+const config = require('./../../config');
 const elasticsearch = require('elasticsearch');
 
 const client = new elasticsearch.Client({ host: `${config.elasticsearch.host}:${config.elasticsearch.port}` });

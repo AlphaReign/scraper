@@ -1,57 +1,27 @@
+const addTorrent = require('./addTorrent');
 const bencode = require('bencode');
-const config = require('./../config');
-const crypto = require('crypto');
+const config = require('./../../config');
+const decodeNodes = require('./decodeNodes');
 const dgram = require('dgram');
-
-const decodeNodes = (data) => {
-	const nodes = [];
-
-	for (let i = 0; i + 26 <= data.length; i += 26) {
-		nodes.push({
-			address: `${data[i + 20]}.${data[i + 21]}.${data[i + 22]}.${data[i + 23]}`,
-			nid: data.slice(i, i + 20),
-			port: data.readUInt16BE(i + 24),
-		});
-	}
-	return nodes;
-};
-const getNeighborID = (target, nid) => Buffer.concat([target.slice(0, 10), nid.slice(10)]);
-const getRandomID = () =>
-	crypto
-		.createHash('sha1')
-		.update(crypto.randomBytes(20))
-		.digest();
-
-const handleError = () => {
-	// Do nothing
-};
-
-const safe = (fn) => (...params) => {
-	try {
-		const response = fn(...params);
-
-		return response;
-	} catch (error) {
-		handleError(error);
-	}
-
-	return undefined;
-};
+const getNeighborID = require('./getNeighborID');
+const getRandomID = require('./getRandomID');
+const handleError = require('./handleError');
+const safely = require('./safely');
 
 const TID_LENGTH = 4;
 const TOKEN_LENGTH = 2;
 const clientID = getRandomID();
 const serverSocket = dgram.createSocket('udp4');
-let nodes = [];
-let onTorrent = (torrent) => console.log(torrent);
 
-const sendMessage = safe((message, rinfo) => {
+let nodes = [];
+
+const sendMessage = safely((message, rinfo) => {
 	const buf = bencode.encode(message);
 
 	serverSocket.send(buf, 0, buf.length, rinfo.port, rinfo.address);
 });
 
-const onFindNodeResponse = safe((responseNodes) => {
+const onFindNodeResponse = safely((responseNodes) => {
 	const decodedNodes = decodeNodes(responseNodes);
 
 	decodedNodes.forEach((node) => {
@@ -63,7 +33,7 @@ const onFindNodeResponse = safe((responseNodes) => {
 	});
 });
 
-const onGetPeersRequest = safe((msg, rinfo) => {
+const onGetPeersRequest = safely((msg, rinfo) => {
 	const {
 		a: { id: nid, info_hash: infohash },
 		t: tid,
@@ -77,7 +47,7 @@ const onGetPeersRequest = safe((msg, rinfo) => {
 	sendMessage({ r: { id: getNeighborID(infohash, clientID), nodes: '', token }, t: tid, y: 'r' }, rinfo);
 });
 
-const onAnnouncePeerRequest = safe((msg, rinfo) => {
+const onAnnouncePeerRequest = safely((msg, rinfo) => {
 	const {
 		a: { id: nid, info_hash: infohash, implied_port: impliedPort, port, token },
 		t: tid,
@@ -94,10 +64,10 @@ const onAnnouncePeerRequest = safe((msg, rinfo) => {
 
 	sendMessage({ r: { id: getNeighborID(nid, clientID) }, t: tid, y: 'r' }, rinfo);
 	// downloadTorrent({ address: rinfo.address, port }, infohash);
-	onTorrent(infohash, { address: rinfo.address, port });
+	addTorrent(infohash, { address: rinfo.address, port });
 });
 
-const onMessage = safe((message, rinfo) => {
+const onMessage = safely((message, rinfo) => {
 	const msg = bencode.decode(message);
 	const type = msg.y && Buffer.isBuffer(msg.y) ? msg.y.toString() : msg.y;
 	const query = msg.q && Buffer.isBuffer(msg.q) ? msg.q.toString() : msg.q;
@@ -138,15 +108,11 @@ const onListening = () => {
 	start();
 };
 
-const crawler = (fn) => {
+const crawler = () => {
 	serverSocket.bind(config.crawler.port, config.crawler.address);
 	serverSocket.on('listening', onListening);
 	serverSocket.on('message', onMessage);
 	serverSocket.on('error', handleError);
-
-	if (typeof fn === 'function') {
-		onTorrent = fn;
-	}
 };
 
 module.exports = crawler;
