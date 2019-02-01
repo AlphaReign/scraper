@@ -84,7 +84,6 @@ const buildRecord = (names, knex, { files, infohash, name }) => {
 		const tags = [...new Set(getTags(names, type))];
 
 		const record = {
-			count: files.length,
 			files: JSON.stringify(files),
 			infohash: infohash.toString('hex'),
 			length: files.reduce((result, { length: fileLength }) => result + fileLength, 0),
@@ -106,8 +105,6 @@ const onMetadata = (metadata, infohash, knex) => {
 		const names = files.map(({ path }) => (Array.isArray(path) ? path.join('/') : path)).concat(name);
 		const invalid = filterTorrent(names);
 		const filesWithOriginal = name && length ? [{ length, path: name }, ...files] : files;
-
-		console.log(length);
 		if (!invalid.length > 0) {
 			buildRecord(names, knex, { files: filesWithOriginal, infohash, name });
 		}
