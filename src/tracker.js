@@ -41,20 +41,16 @@ const scrape = async (knex, records) => {
 };
 
 const getRecords = async (knex) => {
-	const newRecords = await knex('torrents')
-		.whereNull('trackerUpdated')
-		.limit(config.tracker.limit);
+        const newRecords = await knex('torrents')
+                .whereNull('trackerUpdated')
+                .limit(config.tracker.limit);
+        const newLimit = config.tracker.limit - newRecords.length;
+        const age = new Date(Date.now() - 1000 * 60 * config.tracker.age);
+        const outdatedRecords = await knex('torrents')
+                .where('trackerUpdated', '<', age)
+                .limit(newLimit);
 
-	if (newRecords.length > 0) {
-		return newRecords;
-	}
-
-	const age = new Date(Date.now() - 1000 * 60 * config.tracker.age);
-	const outdatedRecords = await knex('torrents')
-		.where('trackerUpdated', '<', age)
-		.limit(config.tracker.limit);
-
-	return outdatedRecords;
+        return [...newRecords, ...outdatedRecords];
 };
 
 const tracker = async (knex) => {
