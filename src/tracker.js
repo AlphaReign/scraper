@@ -42,11 +42,13 @@ const scrape = async (knex, records) => {
 
 const getRecords = async (knex) => {
         const newRecords = await knex('torrents')
+		.select('infohash')
                 .whereNull('trackerUpdated')
                 .limit(config.tracker.limit);
         const newLimit = config.tracker.limit - newRecords.length;
         const age = new Date(Date.now() - 1000 * 60 * config.tracker.age);
         const outdatedRecords = await knex('torrents')
+		.select('infohash')
                 .where('trackerUpdated', '<', age)
                 .limit(newLimit);
 
