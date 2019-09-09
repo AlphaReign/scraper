@@ -45,7 +45,7 @@ const update = async (records) => {
 				update: {
 					_id: record.infohash,
 					_index: 'torrents',
-					_retry_on_conflict: 3,
+					//_retry_on_conflict: 3,
 					_type: 'hash',
 				},
 			},
