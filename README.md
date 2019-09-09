@@ -32,4 +32,4 @@ This scrape relies on storing the torrent data in a database. I recommend either
 -   Build the image: `docker build -t alphareign/scraper:latest .`
 -   Update `config/index.js` (Elasticsearch & Database may be on e.g. 172.17.0.1)
 -   Run `yarn migrate`: `docker run --rm -v $(pwd)/config/index.js:/scraper/config/index.js alphareign/scraper:latest yarn migrate`
--   Start the scraper: `docker run -d --name alphareign-scraper -v $(pwd)/config/index.js:/scraper/config/index.js -p 6881:6881 alphareign/scraper:latest`
+-   Start the scraper: `docker run -d --name alphareign-scraper -v $(pwd)/config/index.js:/scraper/config/index.js -p 6881:6881/udp alphareign/scraper:latest`
