@@ -47,7 +47,7 @@ const config = {
 		age: 360,
 		// Seconds between every scrape
 		frequency: 1,
-		host: 'udp://tracker.coppersurfer.tk:6969/announce',
+		host: 'udp://tracker.opentrackr.org:1337/announce',
 		limit: 75,
 	},
 };
